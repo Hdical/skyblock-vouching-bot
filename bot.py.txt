@@ -1,0 +1,79 @@
+import discord
+import asyncio
+import random
+import os
+
+TOKEN = os.getenv("TOKEN")
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CARRIER_IDS = [int(x.strip()) for x in os.getenv("CARRIER_IDS").split(",")]
+
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
+
+main_templates = [
+    "Carried me in dungeons floor {floor}.",
+    "Solid carry on F{floor}, much appreciated.",
+    "Best carry I've had on F{floor}.",
+    "Clean floor {floor} clear. Respect!",
+    "Made F{floor} feel like F1. Easy carry.",
+    "Big W on floor {floor} thanks to this person.",
+    "Insane run on F{floor}, would vouch again.",
+    "Helped me survive floor {floor}. Legend.",
+    "Absolutely cracked player, carried me on F{floor}.",
+    "This guy just solos floor {floor} like it’s nothing.",
+    "Top-tier teammate for F{floor} runs.",
+]
+
+extra_details = [
+    "⭐ He was super chill and didn’t rush the run.",
+    "⭐ Communication was on point the whole time.",
+    "⭐ Even helped me with gear advice afterward.",
+    "⭐ Revived the whole team more than once.",
+    "⭐ Patient with newer players — huge respect.",
+    "⭐ Didn’t complain even when someone threw.",
+    "⭐ Explained the boss fight clearly.",
+    "⭐ Brought good energy and vibes.",
+    "⭐ Reacted quickly and saved us at the boss.",
+    "⭐ Waited for all teammates, no rage quits.",
+    "⭐ Definitely a person I’d run with again.",
+    "⭐ Encouraged me during the whole run.",
+]
+
+async def send_vouch():
+    await client.wait_until_ready()
+    channel = client.get_channel(CHANNEL_ID)
+
+    while not client.is_closed():
+        floor = random.randint(1, 7)
+        stars = "⭐" * random.choice([4, 5])
+        main_msg = random.choice(main_templates).format(floor=floor)
+        extra = random.sample(extra_details, 5)
+        carrier_id = random.choice(CARRIER_IDS)
+        mention = f"<@{carrier_id}>"
+
+        full_description = f"""
+{main_msg}
+Vouched this guy: {mention}
+
+{stars}
+
+""" + "\n".join(extra)
+
+        embed = discord.Embed(
+            title="Anonymous Vouch",
+            description=full_description.strip(),
+            color=0xFFD700
+        )
+        embed.set_footer(text="Skyblock Syndicate")
+
+        if channel:
+            await channel.send(embed=embed)
+
+        await asyncio.sleep(60)
+
+@client.event
+async def on_ready():
+    print(f"✅ Logged in as {client.user}")
+    client.loop.create_task(send_vouch())
+
+client.run(TOKEN)
